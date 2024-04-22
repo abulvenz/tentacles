@@ -1,8 +1,9 @@
 {
   "name": "tentacles",
   "version": "1.0.0",
-  "main": "index.js",
   "scripts": {
+    "frontend": "parcel index.html",
+    "start": "nodemon index.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -10,7 +11,14 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "express": "^4.19.2",
     "mithril": "^2.2.2",
+    "redis": "^4.6.13",
+    "socket.io": "^4.7.5",
     "tagl-mithril": "^1.2.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0",
+    "parcel": "^2.12.0"
   }
 }
