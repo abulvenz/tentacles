@@ -1,34 +1,51 @@
 import express from "express";
 import { createServer } from "node:http";
-
+import { auth } from "express-openid-connect";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { Server } from "socket.io";
 import m from "mithril";
+import { env } from "custom-env";
 // import * as jsonpatch from "fast-json-patch/index.mjs";
 
 import persistence from "./persistence.mjs";
+env();
 
 console.log(await persistence.objects.loadAllKeys());
-
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+app.use(
+  auth({
+    authRequired: true,
+    idpLogout: true,
+    routes: {
+      login: "/login",
+      logout: "/logout",
+      postLogoutRedirect: "http://localhost:4000",
+    },
+  })
+);
+
 app.get("/", (req, res) => {
+  console.log(req.oidc.user)
+  res.cookie("session", req.oidc.user.sub);
+
   res.sendFile(join(__dirname, "dist", "index.html"));
 });
 
 app.get("/some", (req, res) => {
   res.send(
     JSON.stringify(
-      m("pre",
+      m(
+        "pre",
         [
           "console.log('Hello, world!');",
           "console.log('This is a paragraph.');",
-        ].map((v) => m("div",m("code", v)))
+        ].map((v) => m("div", m("code", v)))
       )
     )
   );
@@ -60,9 +77,9 @@ io.on("connection", (socket) => {
   console.log("user connected", socket.id);
   socket.on("i am", async (msg) => {
     console.log("i am", msg);
-    if (!users.includes(msg.id))
-      users.push(msg.id);
+    if (!users.includes(msg.id)) users.push(msg.id);
     console.log("users", users);
+
   });
 
   socket.on("disconnect", () => {});
