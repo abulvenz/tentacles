@@ -1,0 +1,65 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  overflow: hidden;
+}
+
+.grid-container {
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  grid-template-columns: repeat(3,1fr);
+}
+
+.center-cell {
+  text-align: center;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.general-list, .user-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+.general-list li, .user-list li {
+  margin: 5px 0;
+  padding: 10px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: grab;
+}
+
+.add-todo {
+  margin-top: 10px;
+}
+
+.add-todo input {
+  padding: 5px;
+  margin-right: 5px;
+}
+
+.user-cell {
+  min-width: 100px;
+  min-height: 50px;
+  text-align: center;
+}
+
+.user-list {
+  min-width: 100px;
+  min-height: 50px;
+  border: 2px dashed transparent;
+  transition: border-color 0.3s;
+}
+
+.user-list:hover {
+  border-color: #ccc;
+}
+
+.empty-cell {
+  background: transparent;
+}

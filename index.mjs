@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { Server } from "socket.io";
 import m from "mithril";
 import { env } from "custom-env";
-// import * as jsonpatch from "fast-json-patch/index.mjs";
+import applyPatch  from "fast-json-patch";
 
 import persistence from "./persistence.mjs";
 env();
@@ -18,22 +18,26 @@ const io = new Server(server);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-app.use(
-  auth({
-    authRequired: true,
-    idpLogout: true,
-    routes: {
-      login: "/login",
-      logout: "/logout",
-      postLogoutRedirect: "http://localhost:4000",
-    },
-  })
-);
+const USE_AUTH = false;
+
+if (USE_AUTH)
+  app.use(
+    auth({
+      authRequired: true,
+      idpLogout: true,
+      routes: {
+        login: "/login",
+        logout: "/logout",
+        postLogoutRedirect: "http://localhost:4000",
+      },
+    })
+  );
 
 app.get("/", (req, res) => {
-  console.log(req.oidc.user)
-  res.cookie("session", req.oidc.user.sub);
-
+  if (USE_AUTH) {
+    console.log(req.oidc.user);
+    res.cookie("session", req.oidc.user.sub);
+  }
   res.sendFile(join(__dirname, "dist", "index.html"));
 });
 
@@ -45,7 +49,7 @@ app.get("/some", (req, res) => {
         [
           "console.log('Hello, world!');",
           "console.log('This is a paragraph.');",
-        ].map((v) => m("div", m("code", v)))
+        ].map((v) => m("div", m("code", { onclick: (e) => console.log(e) }, v)))
       )
     )
   );
@@ -53,25 +57,25 @@ app.get("/some", (req, res) => {
 
 app.use(express.static("dist"));
 
-const range = (N) => {
-  const r = [];
-  for (let i = 0; i < N; i++) {
-    r.push(i);
-  }
-  return r;
+const users = [];
+
+const state = {
+  general: [
+    { id: 1, text: "Initial TODO", completed: false },
+    { id: 2, text: "Another TODO", completed: false },
+  ],
+  users: [
+    {
+      name: "alice",
+      todos: [{ id: 3, text: "Alice's TODO", completed: false }],
+    },
+    { name: "bob", todos: [] },
+    { name: "Hans", todos: [] },
+    { name: "Franz", todos: [] },
+  ],
 };
 
-const randomInt = (N) => Math.trunc(Math.random() * N);
 
-const use = (v, f) => f(v);
-
-const shuffle = (arr, r = []) =>
-  use(
-    arr.map((e) => e),
-    (a) => range(arr.length).map((i) => a.splice(randomInt(a.length), 1)[0])
-  );
-
-const users = [];
 
 io.on("connection", (socket) => {
   console.log("user connected", socket.id);
@@ -79,15 +83,19 @@ io.on("connection", (socket) => {
     console.log("i am", msg);
     if (!users.includes(msg.id)) users.push(msg.id);
     console.log("users", users);
-
   });
 
+  socket.emit("state", state)
+
+  socket.on("patch", msg => {
+    console.log("patch", msg)
+    applyPatch.applyPatch(state, msg, false, true)
+    socket.emit("state", state)
+  })
+
   socket.on("disconnect", () => {});
-
   socket.on("game", async (msg) => {});
-
   socket.on("select", async (msg) => {});
-
   socket.on("enter game", async (msg) => {});
 });
 
