@@ -18,22 +18,26 @@ const io = new Server(server);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-app.use(
-  auth({
-    authRequired: true,
-    idpLogout: true,
-    routes: {
-      login: "/login",
-      logout: "/logout",
-      postLogoutRedirect: "http://localhost:4000",
-    },
-  })
-);
+const USE_AUTH = false;
 
+if (USE_AUTH) {
+  app.use(
+    auth({
+      authRequired: true,
+      idpLogout: true,
+      routes: {
+        login: "/login",
+        logout: "/logout",
+        postLogoutRedirect: "http://localhost:4000",
+      },
+    })
+  );
+}
 app.get("/", (req, res) => {
-  console.log(req.oidc.user)
-  res.cookie("session", req.oidc.user.sub);
-
+  if (USE_AUTH) {
+    console.log(req.oidc.user);
+    res.cookie("session", req.oidc.user.sub);
+  }
   res.sendFile(join(__dirname, "dist", "index.html"));
 });
 
@@ -62,7 +66,6 @@ const range = (N) => {
 };
 
 const randomInt = (N) => Math.trunc(Math.random() * N);
-
 const use = (v, f) => f(v);
 
 const shuffle = (arr, r = []) =>
@@ -79,7 +82,6 @@ io.on("connection", (socket) => {
     console.log("i am", msg);
     if (!users.includes(msg.id)) users.push(msg.id);
     console.log("users", users);
-
   });
 
   socket.on("disconnect", () => {});
