@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { Server } from "socket.io";
 import m from "mithril";
 import { env } from "custom-env";
-// import * as jsonpatch from "fast-json-patch/index.mjs";
+import * as jsonpatch from "fast-json-patch/index.mjs";
 
 import persistence from "./persistence.mjs";
 env();
@@ -76,6 +76,20 @@ const shuffle = (arr, r = []) =>
 
 const users = [];
 
+const state = {
+  objects: [
+    {
+      1: {
+        type: "object",
+        x: 0,
+        y: 0,
+        z: 0,
+      },
+    },
+  ],
+  names: [],
+};
+
 io.on("connection", (socket) => {
   console.log("user connected", socket.id);
   socket.on("i am", async (msg) => {
@@ -84,9 +98,15 @@ io.on("connection", (socket) => {
     console.log("users", users);
   });
 
+  socket.emit("state", state);
+
   socket.on("disconnect", () => {});
 
-  socket.on("game", async (msg) => {});
+  socket.on("patch", async (msg) => {
+    console.log("patch", msg);
+    jsonpatch.applyPatch(state, msg);
+    io.emit("uppatch", msg);
+  });
 
   socket.on("select", async (msg) => {});
 
